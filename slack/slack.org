@@ -1,0 +1,274 @@
+#+title: Slackware install and init walkthrough
+#+author: Kyle Terrien
+#+options: ^:{}
+
+* Install
+
+1. Download the ISO from http://www.slackware.com/.  If you are going
+   to install on a physical machine, burn it to a DVD or =dd= it to a
+   USB memory stick.
+
+2. Mount the DVD and peruse these files before attempting an
+   installation.  They provide important information and are extremely
+   helpful.
+
+   + README.TXT
+   + Slackware-HOWTO
+   + RELEASE_NOTES
+
+   You may also wish to read
+
+   + ANNOUNCE.15.0
+   + CHANGES_AND_HINTS.TXT
+   + README.initrd
+   + README_UEFI.TXT
+   + README_CRYPT.TXT
+
+3. Pick your target system.  In this demo, we are using libvirt/qemu-kvm.
+
+   + OS template: slackware-current
+   + CPU: 4 (at least 1)
+   + Mem: 8192 MB (at least 1024 MB, probably 4096 MB if running Xorg)
+   + Disk: 50 GB (fresh install fills 16GB)
+   + Add a CDROM (IDE interface): point to the Slackware ISO
+   + Boot options: configure the system to boot from CDROM
+
+4. Begin Installation.  Boot with the default kernel.  Use the default
+   US keyboard map.
+
+5. Login as root.
+
+   Hint: Use ~<Shift>+<PageUp>~ and ~<Shift>+<PageDown>~ scroll the
+   console.
+
+6. Partition: =fdisk=, =cfdisk=, or =parted=.  For advanced
+   configurations, you may wish to use GParted on your Ubuntu, Mint,
+   or Slackware Live DVD.  You may wish to consider using a separate
+   =/boot= or =/home= partition.
+
+   #+begin_src sh
+     fdisk -l
+     fdisk /dev/vda
+     # Print drive topology
+     p
+     # Create one big primary partition.  Leave room for 1GiB of swap.
+     # Sectors 2048-102760447
+     n
+     # Fill the remaining 1GiB with a swap partition.  Set its type to 82
+     # so that the installer knows it is a swap partition.
+     n
+     t
+     # Write the partition table to disk
+     w
+   #+end_src
+
+7. Run =setup=.
+
+8. ADDSWAP.  Select =/dev/vda2=.
+
+9. Select =/dev/vda1= for the root partition.  Format it as ext4.
+
+10. Select source media: Slackware DVD.
+
+11. Package series selection: Select everything.  Use ‘terse’ mode.
+    Approx. time: 9min 45sec.
+
+12. Skip USB flash boot.
+
+13. Install LILO: simple mode.  Use the standard Linux console.
+    Install to Master Boot Record (MBR).
+
+14. Load GPM (mouse server) b/c why not?
+
+15. Configure network.  Set a hostname.  Set domain to ‘localdomain’.
+    No VLAN.  Either use DHCP (for simple setup) or NetworkManager
+    (for a desktop).
+
+16. Confirm startup services to run.  You probably want rc.ntpd.  You
+    may or may not want rc.sshd.  Use the space bar to enable/disable
+    an item.
+
+17. Console fonts?  (No for me.)
+
+18. Hardware clock set to UTC?  YES!
+
+19. Select timezone: America/Los_Angeles
+
+20. Default vi Editor: nvi (default)
+
+21. Select default Window Manager for X: KDE
+
+22. Set a root password.  Setup is complete!
+
+23. Drop to a shell.  There is one more thing to do: create a limited
+    user account.
+
+    #+begin_src sh
+      chroot /mnt bash -l
+      groupadd -g 2290 kyle
+      adduser
+      # Name: kyle, UID: 2290, Group: kyle, press UP arrow to select default
+      # additional groups, add ‘users’ to list of additional groups.
+    #+end_src
+
+24. That’s it!  =poweroff=.  Remove the DVD and disable CDROM boot.
+
+* Install all the patches
+
+First, consult the manual.
+
+#+begin_src sh
+  man slackpkg
+#+end_src
+
+Uncomment a mirror.
+
+#+begin_src sh
+  vi /etc/slackpkg/mirrors
+  # Uncomment http://mirrors.us.kernel.org/slackware/slackware64-15.0/
+#+end_src
+
+Update indexes and upgrade.  Most of the time, you will only need
+‘update’ and ‘upgrade-all’.  However, the full dist-upgrade procedure
+is
+
+#+begin_src sh
+  slackpkg update
+  slackpkg install-new
+  slackpkg upgrade-all
+  slackpkg clean-system
+#+end_src
+
+Consult =/var/lib/slackpkg/ChangeLog.txt= for a list of package
+changes.
+
+* Configure some things
+
++ Annoyance #1: I don’t want GPM.  How do I to disable a service?
+
+  #+begin_src sh
+    cd /etc/rc.d
+    ./rc.gpm stop
+    chmod -x rc.gpm
+  #+end_src
+
+  Each service has a shell script that starts it.  The executable bit
+  determines whether it is run during boot.
+
++ Annoyance #2: LILO timeout time is 2 minutes.  Yikes!  Let’s fix
+  that.
+
+  #+begin_src sh
+    vi /etc/lilo
+    # Set
+    # timeout = 20
+    # (Values are tenths of a second.)
+
+    lilo
+  #+end_src
+
+  While we are in there, let’s set the generic kernel to boot with the
+  initrd.  The initrd is automatically generated in 15.0 (new).
+  However, you need to configure LILO to boot it.  There is a section
+  that reads
+
+  #+begin_src conf
+    # Linux bootable partition config begins
+    image = /boot/vmlinuz
+      root = /dev/vda1
+      label = Linux
+      read-only
+    # Linux bootable partition config ends
+  #+end_src
+
+  Change it to
+
+  #+begin_src conf
+    # Linux bootable partition config begins
+    image = /boot/vmlinuz-generic
+      initrd = /boot/initrd.gz
+      root = /dev/vda1
+      label = Linux
+      read-only
+    image = /boot/vmlinuz-huge
+      root = /dev/vda1
+      label = Linux-huge
+      read-only
+    # Linux bootable partition config ends
+  #+end_src
+
+  #+begin_src sh
+    lilo
+  #+end_src
+
++ Where is the GUI?
+
+  There are two ways to get a GUI.  Both are valid.  Which one you use
+  is personal preference.
+
+  Method #1 is to enable a Display Manager.  This will display a nice
+  graphical login screen.  To enable a Display Manager, set the
+  default runlevel from 3 to 4.
+
+  #+begin_src sh
+    vi /etc/inittab
+    # Find the line that looks like
+    #
+    # id:3:initdefault:
+    #
+    # Change it to
+    #
+    # id:4:initdefault
+
+    telinit 4 ; exit
+    # OR
+    reboot
+  #+end_src
+
+  Method #2 is to login to a tty and run =startx=.  This is the
+  “old-school” way of running Xorg.  First, select your preferred
+  desktop environment (=xwmconfig=) to create a =.xinitrc=.  Then, run
+  =startx=.
+
+  #+begin_src sh
+    xwmconfig
+    startx
+  #+end_src
+
++ Add SSH keys.
+
+  In the VM: get the IP address.
+
+  #+begin_src sh
+    ip a
+  #+end_src
+
+  On the host: add the IP address to =/etc/hosts= (for convenience)
+  and run =ssh-copy-id=.
+
+  #+begin_src sh
+    sudo vi /etc/hosts
+    ssh-copy-id -i ~/.ssh/id_rsa.pub slack1
+  #+end_src
+
++ Configure sudo.  As root, run
+
+  #+begin_src sh
+    usermod -a -G wheel kyle
+    visudo
+  #+end_src
+
+  #+begin_src conf
+    ## Uncomment to allow members of group wheel to execute any command
+    %wheel ALL=(ALL:ALL) ALL
+  #+end_src
+
+  As kyle (logout and login again), run
+
+  #+begin_src sh
+    sudo -l
+  #+end_src
+
+* Rough benchmarks
+
++ Used memory: 93 MB without graphics, 518 MB in KDE with Konsole running.
