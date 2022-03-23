@@ -272,3 +272,15 @@ changes.
 * Rough benchmarks
 
 + Used memory: 93 MB without graphics, 518 MB in KDE with Konsole running.
+
+* Init process
+
+1. LILO loads kernel and initrd
+2. initrd: =/boot/initrd-tree=
+3. =/etc/inittab= -> master config file
+4. =/etc/rc.d/rc.S= -> sysinit
+5. =/etc/rc.d/rc.M= -> multi-user
+
+Shutdown/reboot: =/etc/rc.d/rc.6=
+
+Entering single user mode: =/etc/rc.d/rc.K=
