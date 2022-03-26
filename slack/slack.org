@@ -2,6 +2,12 @@
 #+author: Kyle Terrien
 #+options: ^:{}
 
+* Why?
+
++ Why not?
++ Security?  Things are off by default.
++ Don’t want systemd?
+
 * Install
 
 1. Download the ISO from http://www.slackware.com/.  (For most parts
@@ -305,3 +311,8 @@ http://troubleshooters.com/linux/diy/howboot.htm
 Shutdown/reboot: =/etc/rc.d/rc.6=
 
 Entering single user mode: =/etc/rc.d/rc.K=
+
+* Other fun things
+
++ [[https://docs.slackware.com/slackware:liveslak][Slackware Live Edition]]
++ [[https://www.youtube.com/watch?v=L_T-HBQH2tI][DistroTube installs Slackware]]
