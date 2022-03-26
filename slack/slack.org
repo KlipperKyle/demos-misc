@@ -4,9 +4,13 @@
 
 * Install
 
-1. Download the ISO from http://www.slackware.com/.  If you are going
-   to install on a physical machine, burn it to a DVD or =dd= it to a
-   USB memory stick.
+1. Download the ISO from http://www.slackware.com/.  (For most parts
+   in the US, https://mirrors.kernel.org/ is a good mirror site.)  If
+   you are going to install on a physical machine, burn it to a DVD,
+   use =dd= to “burn” it to a USB memory stick, or use [[https://www.balena.io/etcher/][Balena Etcher]]
+   to “burn” it to a USB memory stick.
+
+   : dd if=slackware64-15.0-install-dvd.iso of=/dev/sdx bs=1M status=progress
 
 2. Mount the DVD and peruse these files before attempting an
    installation.  They provide important information and are extremely
@@ -30,7 +34,9 @@
    + CPU: 4 (at least 1)
    + Mem: 8192 MB (at least 1024 MB, probably 4096 MB if running Xorg)
    + Disk: 50 GB (fresh install fills 16GB)
-   + Add a CDROM (IDE interface): point to the Slackware ISO
+   + “Customize hardware before install”
+   + Add a CDROM device (buried under Storage): point to the Slackware
+     ISO.  Use the IDE bus.
    + Boot options: configure the system to boot from CDROM
 
 4. Begin Installation.  Boot with the default kernel.  Use the default
@@ -139,10 +145,28 @@ is
   slackpkg clean-system
 #+end_src
 
+Tip: perform kernel upgrades in a separate transaction.
+
 Consult =/var/lib/slackpkg/ChangeLog.txt= for a list of package
 changes.
 
 * Configure some things
+
++ Add SSH keys.
+
+  In the VM: get the IP address.
+
+  #+begin_src sh
+    ip a
+  #+end_src
+
+  On the host: add the IP address to =/etc/hosts= (for convenience)
+  and run =ssh-copy-id=.
+
+  #+begin_src sh
+    sudo vi /etc/hosts
+    ssh-copy-id -i ~/.ssh/id_rsa.pub slack1
+  #+end_src
 
 + Annoyance #1: I don’t want GPM.  How do I to disable a service?
 
@@ -201,6 +225,24 @@ changes.
     lilo
   #+end_src
 
++ Configure sudo.  As root, run
+
+  #+begin_src sh
+    usermod -a -G wheel kyle
+    visudo
+  #+end_src
+
+  #+begin_src conf
+    ## Uncomment to allow members of group wheel to execute any command
+    %wheel ALL=(ALL:ALL) ALL
+  #+end_src
+
+  As kyle (logout and login again), run
+
+  #+begin_src sh
+    sudo -l
+  #+end_src
+
 + Where is the GUI?
 
   There are two ways to get a GUI.  Both are valid.  Which one you use
@@ -235,45 +277,24 @@ changes.
     startx
   #+end_src
 
-+ Add SSH keys.
+* Useful Slackware-specific commands
 
-  In the VM: get the IP address.
-
-  #+begin_src sh
-    ip a
-  #+end_src
-
-  On the host: add the IP address to =/etc/hosts= (for convenience)
-  and run =ssh-copy-id=.
-
-  #+begin_src sh
-    sudo vi /etc/hosts
-    ssh-copy-id -i ~/.ssh/id_rsa.pub slack1
-  #+end_src
-
-+ Configure sudo.  As root, run
-
-  #+begin_src sh
-    usermod -a -G wheel kyle
-    visudo
-  #+end_src
-
-  #+begin_src conf
-    ## Uncomment to allow members of group wheel to execute any command
-    %wheel ALL=(ALL:ALL) ALL
-  #+end_src
-
-  As kyle (logout and login again), run
-
-  #+begin_src sh
-    sudo -l
-  #+end_src
++ =slackpkg= :: Install official updates
++ =pkgtool= :: Local packages, re-run setup scripts
+  + =upgradepkg= :: Upgrade/Downgrade or (in case of =--install-new=)
+    install a new package
+  + =installpkg= :: Install a new package, regardless of status
++ =sbotools=, =sbopkg= :: Build packages from
+  https://slackbuilds.org/, which is like ports or AUR for Slackware.
 
 * Rough benchmarks
 
 + Used memory: 93 MB without graphics, 518 MB in KDE with Konsole running.
 
 * Init process
+
+Want the full process?
+http://troubleshooters.com/linux/diy/howboot.htm
 
 1. LILO loads kernel and initrd
 2. initrd: =/boot/initrd-tree=
