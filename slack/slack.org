@@ -302,6 +302,8 @@ changes.
 Want the full process?
 http://troubleshooters.com/linux/diy/howboot.htm
 
+** In Slackware
+
 1. LILO loads kernel and initrd
 2. initrd: =/boot/initrd-tree=
 3. =/etc/inittab= -> master config file
@@ -311,6 +313,15 @@ http://troubleshooters.com/linux/diy/howboot.htm
 Shutdown/reboot: =/etc/rc.d/rc.6=
 
 Entering single user mode: =/etc/rc.d/rc.K=
+
+** In Ubuntu
+
+Early boot:
+
+: lsinitramfs /boot/initrd.img-5.13.0-40-generic
+: unmkinitramfs /boot/initrd.img-5.13.0-40-generic
+
+Boot process: [[https://www.freedesktop.org/software/systemd/man/bootup.html][bootup(7)]]
 
 * Other fun things
 
