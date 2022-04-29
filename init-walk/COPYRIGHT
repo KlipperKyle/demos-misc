@@ -1,0 +1,9 @@
+All source files in slack/ and ubuntu/ are copyright their original
+owners (Slackware Inc. and Canonical Ltd., respectively).  They are
+provided for your convenience and educational quick reference.
+
+slack -> Critical init scripts from Slackware 15.0
+ubuntu -> Critical init scripts from Ubuntu 21.10
+
+One of the great things about free/libre software is that you can
+study how such software works.  :-)
