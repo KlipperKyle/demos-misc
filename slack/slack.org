@@ -297,32 +297,6 @@ changes.
 
 + Used memory: 93 MB without graphics, 518 MB in KDE with Konsole running.
 
-* Init process
-
-Want the full process?
-http://troubleshooters.com/linux/diy/howboot.htm
-
-** In Slackware
-
-1. LILO loads kernel and initrd
-2. initrd: =/boot/initrd-tree=
-3. =/etc/inittab= -> master config file
-4. =/etc/rc.d/rc.S= -> sysinit
-5. =/etc/rc.d/rc.M= -> multi-user
-
-Shutdown/reboot: =/etc/rc.d/rc.6=
-
-Entering single user mode: =/etc/rc.d/rc.K=
-
-** In Ubuntu
-
-Early boot:
-
-: lsinitramfs /boot/initrd.img-5.13.0-40-generic
-: unmkinitramfs /boot/initrd.img-5.13.0-40-generic
-
-Boot process: [[https://www.freedesktop.org/software/systemd/man/bootup.html][bootup(7)]]
-
 * Other fun things
 
 + [[https://docs.slackware.com/slackware:liveslak][Slackware Live Edition]]
