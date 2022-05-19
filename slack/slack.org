@@ -39,10 +39,10 @@
    + OS template: slackware-current
    + CPU: 4 (at least 1)
    + Mem: 8192 MB (at least 1024 MB, probably 4096 MB if running Xorg)
-   + Disk: 50 GB (fresh install fills 16GB)
+   + Disk: 50 GB (fresh install fills 16GB).  Use the VirtIO bus.
    + “Customize hardware before install”
    + Add a CDROM device (buried under Storage): point to the Slackware
-     ISO.  Use the IDE bus.
+     ISO.  Use the IDE bus only for the CDROM.
    + Boot options: configure the system to boot from CDROM
 
 4. Begin Installation.  Boot with the default kernel.  Use the default
@@ -150,6 +150,17 @@ is
   slackpkg upgrade-all
   slackpkg clean-system
 #+end_src
+
+If there is a kernel upgrade, then there are two commands you must run
+after the upgrade finishes.
+
+#+begin_src sh
+  geninitrd
+  lilo
+#+end_src
+
+If you do not run these two commands after upgrading your kernel, then
+your system will not boot!
 
 Tip: perform kernel upgrades in a separate transaction.
 
