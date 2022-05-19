@@ -22,6 +22,6 @@ Entering single user mode: =/etc/rc.d/rc.K=
 Early boot:
 
 : lsinitramfs /boot/initrd.img
-: unmkinitramfs /boot/initrd.img .
+: unmkinitramfs /boot/initrd.img initramfs
 
 Systemd boot process: [[https://www.freedesktop.org/software/systemd/man/bootup.html][bootup(7)]]
