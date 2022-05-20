@@ -2,8 +2,30 @@
 #+author: Kyle Terrien
 #+options: ^:{}
 
+* General process
+
 Want the full process?
 http://troubleshooters.com/linux/diy/howboot.htm
+
+1. Boot ROM: chip on your motherboard.  Motherboard loads the
+   BIOS/UEFI.  POST is performed.
+   + BIOS: Basic Input/Output System.  Pre-2012.  The first block of
+     the first disk is executed (512 bytes).  This small program then
+     loads another stage from somewhere else on disk.
+   + UEFI: Unified Extensible Firmware Interface.  Post-2012.  A
+     pre-boot operating system looks for the bootloader (an executable
+     file) on a filesystem and runs it.
+2. Bootloader: Usually GRUB, but sometimes LILO.
+   + Purpose: load the kernel executable image and initramfs into
+     memory.  Execute it.
+3. Initramfs (also called initrd): small in-memory filesystem.
+   + Purpose: find the root partition, mount it, and transfer control
+     to it.
+   + Complications: RAID, encryption, special drivers.
+   + Last step: =switch_root=
+4. Userspace: systemd (or sysvinit)
+   + System services are started: sshd, httpd, postfix etc.
+   + Login screen
 
 * In Slackware
 
@@ -25,3 +47,70 @@ Early boot:
 : unmkinitramfs /boot/initrd.img initramfs
 
 Systemd boot process: [[https://www.freedesktop.org/software/systemd/man/bootup.html][bootup(7)]]
+
+* Boot troubleshooting
+
+See https://github.com/linuxcsuf/linuxcsuf/wiki/Rescue-boot
+
+If a boot splash screen is hung, then press ~<Esc>~ to dismiss it and
+see the text behind it.  If the problem and fix are immediately
+obvious, then great!  If not, then continue.
+
+The first step is accessing the GRUB menu.  If you have a GRUB menu
+when you boot, then great!  If not, then you must undo your distro’s
+configurations which hide the GRUB menu.
+
+The most reliable way is to adjust some GRUB settings (if you can).
+
+In =/etc/default/grub= (or =/etc/default/grub.d/99-local.cfg=):
+
+#+begin_src sh
+  # Make GRUB behave more traditionally
+  GRUB_TIMEOUT=2
+  GRUB_TIMEOUT_STYLE=
+  GRUB_CMDLINE_LINUX_DEFAULT=""
+  GRUB_TERMINAL=console
+#+end_src
+
+Set a ~GRUB_TIMEOUT~ so that GRUB displays a menu.  Make sure that
+~GRUB_TIMEOUT_STYLE~ is *not* ~hidden~.  Also, make sure that ~quiet
+splash~ and any other options that set up a graphical splash screen
+are gone.  (This makes potential problems more visible.)
+
+Write the GRUB config to disk.
+
+#+begin_src sh
+  # In Debian and Ubuntu
+  update-grub
+
+  # Other distros do not have that wrapper script.  So, alternatively
+  grub-mkconfig -o /boot/grub/grub.cfg
+#+end_src
+
+Now, your system will display a lot of cool-looking text during boot.
+(However, the graphical login screen will still appear when everything
+finishes.)
+
+Alternatively, if you cannot adjust GRUB settings, then hold ~<Shift>~
+while the system boots.  If you are lucky and time it correctly, then
+you will see the GRUB menu.
+
+Once you have a GRUB menu, press ~e~ (to edit parameters).  Find the
+line that starts with ~linux~ (not ~initrd~!).  This is the kernel
+command line.  Append one of the following boot parameters to the
+kernel command line.  One of the following should work, but they all
+behave slightly differently depending on distro.
+
++ ~single~ (or ~1~) -> Boot into single-user mode: i.e. root
+  filesystem with minimal system services.
++ ~init=/bin/sh~ -> Run ~/bin/sh~ as PID 1, which bypasses systemd or
+  sysvinit.
++ ~systemd.debug_shell~ -> Run a root shell on tty9
++ ~systemd.unit=rescue.target~ -> Same as ~single~
++ ~systemd.unit=emergency.target~ -> Usually drops you into the
+  initramfs
+
+Press ~<Ctrl+x>~ to boot.
+
+See also: bootparam(7), systemd.special(7),
+https://wiki.archlinux.org/title/General_troubleshooting#Recovery_shells
