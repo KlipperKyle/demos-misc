@@ -8,20 +8,26 @@ Want the full process?
 http://troubleshooters.com/linux/diy/howboot.htm
 
 1. Boot ROM: chip on your motherboard.  Motherboard loads the
-   BIOS/UEFI.  POST is performed.
-   + BIOS: Basic Input/Output System.  Pre-2012.  The first block of
-     the first disk is executed (512 bytes).  This small program then
-     loads another stage from somewhere else on disk.
-   + UEFI: Unified Extensible Firmware Interface.  Post-2012.  A
-     pre-boot operating system looks for the bootloader (an executable
-     file) on a filesystem and runs it.
+   BIOS/UEFI.  POST (Power On Self Test) is performed.
+   + BIOS: Basic Input/Output System.  Pre-2012.  Old-school boot or
+     “legacy boot.”  The first block of the first disk is executed
+     (512 bytes).  This small program then loads another stage from
+     somewhere else on disk.
+   + UEFI BIOS: Unified Extensible Firmware Interface.  Post-2012.
+     “UEFI-native boot.”  A pre-boot operating system looks for the
+     bootloader (an executable file) on a filesystem and runs it.
 2. Bootloader: Usually GRUB, but sometimes LILO.
    + Purpose: load the kernel executable image and initramfs into
      memory.  Execute it.
 3. Initramfs (also called initrd): small in-memory filesystem.
    + Purpose: find the root partition, mount it, and transfer control
      to it.
-   + Complications: RAID, encryption, special drivers.
+   + Customized for each installation
+   + Complications: LVM, RAID, encryption, special drivers.
+   + Each Distro does things differently: Debian uses busybox
+     =mkinitramfs=.  Red Hat, SUSE, and others use =dracut= which is
+     friendly to systemd.  Slackware has its own scripts.  Gentoo has
+     =genkernel=, but =dracut= can be used sans systemd.
    + Last step: =switch_root=
 4. Userspace: systemd (or sysvinit)
    + System services are started: sshd, httpd, postfix etc.
